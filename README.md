@@ -1,4 +1,4 @@
-# GitHub Profile Viewer
+# GitHub Profile Generator
 
 A simple React application that allows users to search and view GitHub user profiles with a clean, dark-themed interface.
 ## Features
