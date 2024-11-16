@@ -2,35 +2,33 @@ import React, { useState, useEffect, useRef } from "react";
 import { Search, Users, GitBranch, Link, MapPin } from "lucide-react";
 import "./App.css";
 
-const App = () => {
+function App() {
   const [username, setUsername] = useState("");
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(false); //prevents multiple fetches
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [suggestions, setSuggestions] = useState([]); //list of suggestions
-  const [showSuggestions, setShowSuggestions] = useState(false); //control
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionRef = useRef(null);
 
-  // Close all suggestions when clicking outside
-  useEffect(() => {
-    //checks whether the outside click
-    const handleClickOutside = (event) => {
+  useEffect(function() {
+    function handleClickOutside(event) {
       if (
         suggestionRef.current &&
         !suggestionRef.current.contains(event.target)
       ) {
         setShowSuggestions(false);
       }
-    };
+    }
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return function() {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
-  // Fetch suggestions as user types
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      //skip for short names
+  useEffect(function() {
+    async function fetchSuggestions() {
       if (username.trim().length < 2) {
         setSuggestions([]);
         return;
@@ -46,13 +44,15 @@ const App = () => {
         console.error("Error fetching suggestions:", err);
         setSuggestions([]);
       }
-    };
+    }
 
     const debounceTimer = setTimeout(fetchSuggestions, 300);
-    return () => clearTimeout(debounceTimer);
+    return function() {
+      clearTimeout(debounceTimer);
+    };
   }, [username]);
-  //fetch the github user
-  const fetchGitHubUser = async (searchUsername) => {
+
+  async function fetchGitHubUser(searchUsername) {
     if (!searchUsername.trim()) return;
 
     setLoading(true);
@@ -72,13 +72,12 @@ const App = () => {
     } finally {
       setLoading(false);
     }
-  };
-  // function when a user clicks in any of the suggestions
-  const handleSuggestionClick = (suggestionLogin) => {
-    //updates the username and then fetches the details
+  }
+
+  function handleSuggestionClick(suggestionLogin) {
     setUsername(suggestionLogin);
     fetchGitHubUser(suggestionLogin);
-  };
+  }
 
   return (
     <div className="container">
@@ -90,32 +89,45 @@ const App = () => {
             <input
               placeholder="Enter GitHub username"
               value={username}
-              onChange={(e) => {
+              onChange={function(e) {
                 setUsername(e.target.value);
                 setShowSuggestions(true);
               }}
-              onKeyUp={(e) => e.key === "Enter" && fetchGitHubUser(username)}
+              onKeyUp={function(e) {
+                if (e.key === "Enter") {
+                  fetchGitHubUser(username);
+                }
+              }}
             />
             {showSuggestions && suggestions.length > 0 && (
               <div className="suggestions">
-                {suggestions.map((suggestion) => (
-                  <div
-                    key={suggestion.id}
-                    className="suggestion-item"
-                    onClick={() => handleSuggestionClick(suggestion.login)}
-                  >
-                    <img
-                      src={suggestion.avatar_url}
-                      alt={suggestion.login}
-                      className="suggestion-avatar"
-                    />
-                    <span>{suggestion.login}</span>
-                  </div>
-                ))}
+                {suggestions.map(function(suggestion) {
+                  return (
+                    <div
+                      key={suggestion.id}
+                      className="suggestion-item"
+                      onClick={function() {
+                        handleSuggestionClick(suggestion.login);
+                      }}
+                    >
+                      <img
+                        src={suggestion.avatar_url}
+                        alt={suggestion.login}
+                        className="suggestion-avatar"
+                      />
+                      <span>{suggestion.login}</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
-          <button onClick={() => fetchGitHubUser(username)} disabled={loading}>
+          <button 
+            onClick={function() {
+              fetchGitHubUser(username);
+            }} 
+            disabled={loading}
+          >
             <Search size={16} />
             Search
           </button>
@@ -132,7 +144,9 @@ const App = () => {
             <div className="profile-info">
               <h2
                 className="profile-name"
-                onClick={() => window.open("https://github.com", "_blank")}
+                onClick={function() {
+                  window.open("https://github.com", "_blank");
+                }}
                 style={{
                   cursor: "pointer",
                   textDecoration: "none",
@@ -189,5 +203,6 @@ const App = () => {
       </div>
     </div>
   );
-};
+}
+
 export default App;
