@@ -11,7 +11,7 @@ function App() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionRef = useRef(null);
 
-  useEffect(function() {
+  useEffect(function () {
     function handleClickOutside(event) {
       if (
         suggestionRef.current &&
@@ -22,35 +22,38 @@ function App() {
     }
 
     document.addEventListener("mousedown", handleClickOutside);
-    return function() {
+    return function () {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  useEffect(function() {
-    async function fetchSuggestions() {
-      if (username.trim().length < 2) {
-        setSuggestions([]);
-        return;
+  useEffect(
+    function () {
+      async function fetchSuggestions() {
+        if (username.trim().length < 2) {
+          setSuggestions([]);
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `https://api.github.com/search/users?q=${username}+in:login&per_page=5`
+          );
+          const data = await response.json();
+          setSuggestions(data.items || []);
+        } catch (err) {
+          console.error("Error fetching suggestions:", err);
+          setSuggestions([]);
+        }
       }
 
-      try {
-        const response = await fetch(
-          `https://api.github.com/search/users?q=${username}+in:login&per_page=5`
-        );
-        const data = await response.json();
-        setSuggestions(data.items || []);
-      } catch (err) {
-        console.error("Error fetching suggestions:", err);
-        setSuggestions([]);
-      }
-    }
-
-    const debounceTimer = setTimeout(fetchSuggestions, 300);
-    return function() {
-      clearTimeout(debounceTimer);
-    };
-  }, [username]);
+      const debounceTimer = setTimeout(fetchSuggestions, 300);
+      return function () {
+        clearTimeout(debounceTimer);
+      };
+    },
+    [username]
+  );
 
   async function fetchGitHubUser(searchUsername) {
     if (!searchUsername.trim()) return;
@@ -89,11 +92,11 @@ function App() {
             <input
               placeholder="Enter GitHub username"
               value={username}
-              onChange={function(e) {
+              onChange={function (e) {
                 setUsername(e.target.value);
                 setShowSuggestions(true);
               }}
-              onKeyUp={function(e) {
+              onKeyUp={function (e) {
                 if (e.key === "Enter") {
                   fetchGitHubUser(username);
                 }
@@ -101,12 +104,12 @@ function App() {
             />
             {showSuggestions && suggestions.length > 0 && (
               <div className="suggestions">
-                {suggestions.map(function(suggestion) {
+                {suggestions.map(function (suggestion) {
                   return (
                     <div
                       key={suggestion.id}
                       className="suggestion-item"
-                      onClick={function() {
+                      onClick={function () {
                         handleSuggestionClick(suggestion.login);
                       }}
                     >
@@ -122,10 +125,10 @@ function App() {
               </div>
             )}
           </div>
-          <button 
-            onClick={function() {
+          <button
+            onClick={function () {
               fetchGitHubUser(username);
-            }} 
+            }}
             disabled={loading}
           >
             <Search size={16} />
@@ -144,7 +147,7 @@ function App() {
             <div className="profile-info">
               <h2
                 className="profile-name"
-                onClick={function() {
+                onClick={function () {
                   window.open("https://github.com", "_blank");
                 }}
                 style={{
