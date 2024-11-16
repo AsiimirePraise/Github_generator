@@ -33,7 +33,6 @@ npm run dev
 
 ## Technologies Used
 - React
-- Tailwind CSS
 - Lucide React Icons
 - GitHub API
 
