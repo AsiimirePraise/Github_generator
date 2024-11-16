@@ -1,31 +1,36 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, Users, GitBranch, Link, MapPin } from 'lucide-react';
-import './App.css';
+import React, { useState, useEffect, useRef } from "react";
+import { Search, Users, GitBranch, Link, MapPin } from "lucide-react";
+import "./App.css";
 
 const App = () => {
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); //prevents multiple fetches
   const [error, setError] = useState(null);
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState([]); //list of suggestions
+  const [showSuggestions, setShowSuggestions] = useState(false); //control
   const suggestionRef = useRef(null);
 
   // Close all suggestions when clicking outside
   useEffect(() => {
+    //checks whether the outside click
     const handleClickOutside = (event) => {
-      if (suggestionRef.current && !suggestionRef.current.contains(event.target)) {
+      if (
+        suggestionRef.current &&
+        !suggestionRef.current.contains(event.target)
+      ) {
         setShowSuggestions(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Fetch suggestions as user types
   useEffect(() => {
     const fetchSuggestions = async () => {
+      //skip for short names
       if (username.trim().length < 2) {
         setSuggestions([]);
         return;
@@ -38,7 +43,7 @@ const App = () => {
         const data = await response.json();
         setSuggestions(data.items || []);
       } catch (err) {
-        console.error('Error fetching suggestions:', err);
+        console.error("Error fetching suggestions:", err);
         setSuggestions([]);
       }
     };
@@ -46,17 +51,19 @@ const App = () => {
     const debounceTimer = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(debounceTimer);
   }, [username]);
-
+  //fetch the github user
   const fetchGitHubUser = async (searchUsername) => {
     if (!searchUsername.trim()) return;
-    
+
     setLoading(true);
     setError(null);
     setShowSuggestions(false);
-    
+
     try {
-      const response = await fetch(`https://api.github.com/users/${searchUsername}`);
-      if (!response.ok) throw new Error('User not found');
+      const response = await fetch(
+        `https://api.github.com/users/${searchUsername}`
+      );
+      if (!response.ok) throw new Error("User not found");
       const data = await response.json();
       setUserData(data);
     } catch (err) {
@@ -66,8 +73,9 @@ const App = () => {
       setLoading(false);
     }
   };
-
+  // function when a user clicks in any of the suggestions
   const handleSuggestionClick = (suggestionLogin) => {
+    //updates the username and then fetches the details
     setUsername(suggestionLogin);
     fetchGitHubUser(suggestionLogin);
   };
@@ -76,7 +84,7 @@ const App = () => {
     <div className="container">
       <div className="search-container">
         <h1>GitHub Profile Generator</h1>
-        
+
         <div className="search-box" ref={suggestionRef}>
           <div className="input-wrapper">
             <input
@@ -86,7 +94,7 @@ const App = () => {
                 setUsername(e.target.value);
                 setShowSuggestions(true);
               }}
-              onKeyPress={(e) => e.key === 'Enter' && fetchGitHubUser(username)}
+              onKeyUp={(e) => e.key === "Enter" && fetchGitHubUser(username)}
             />
             {showSuggestions && suggestions.length > 0 && (
               <div className="suggestions">
@@ -96,9 +104,9 @@ const App = () => {
                     className="suggestion-item"
                     onClick={() => handleSuggestionClick(suggestion.login)}
                   >
-                    <img 
-                      src={suggestion.avatar_url} 
-                      alt={suggestion.login} 
+                    <img
+                      src={suggestion.avatar_url}
+                      alt={suggestion.login}
                       className="suggestion-avatar"
                     />
                     <span>{suggestion.login}</span>
@@ -114,17 +122,28 @@ const App = () => {
         </div>
 
         {loading && <div className="loader"></div>}
-        
+
         {error && <div className="error">{error}</div>}
 
         {userData && (
           <div className="profile-card">
             <img src={userData.avatar_url} alt={`${userData.login}'s avatar`} />
-            
+
             <div className="profile-info">
-              <h2>{userData.name || userData.login}</h2>
+              <h2
+                className="profile-name"
+                onClick={() => window.open("https://github.com", "_blank")}
+                style={{
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  color: "green",
+                }}
+                title="View GitHub Profile"
+              >
+                {userData.name || userData.login}
+              </h2>
               <p className="username">@{userData.login}</p>
-              
+
               {userData.bio && <p className="bio">{userData.bio}</p>}
 
               <div className="stats">
@@ -153,7 +172,11 @@ const App = () => {
                   {userData.blog && (
                     <div className="link-item">
                       <Link size={16} />
-                      <a href={userData.blog} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={userData.blog}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         {userData.blog}
                       </a>
                     </div>
@@ -167,5 +190,4 @@ const App = () => {
     </div>
   );
 };
-
 export default App;
